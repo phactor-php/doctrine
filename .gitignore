@@ -2,3 +2,4 @@
 vendor
 tools
 composer.phar
+composer.lock
