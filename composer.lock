@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d7331ea5c09e14dd5017e1c7dcba9dff",
+    "content-hash": "b5ce5d9231738f4e3dff863f2195f0bc",
     "packages": [
         {
             "name": "doctrine/annotations",
@@ -1966,17 +1966,17 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phactor-php/phactor.git",
-                "reference": "03ae8f33af257d7ffa5d7dead638559ec5d86212"
+                "reference": "9d0360c60f3de19aa5da3e2961a6fcd91b466c49"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phactor-php/phactor/zipball/03ae8f33af257d7ffa5d7dead638559ec5d86212",
-                "reference": "03ae8f33af257d7ffa5d7dead638559ec5d86212",
+                "url": "https://api.github.com/repos/phactor-php/phactor/zipball/9d0360c60f3de19aa5da3e2961a6fcd91b466c49",
+                "reference": "9d0360c60f3de19aa5da3e2961a6fcd91b466c49",
                 "shasum": ""
             },
             "require": {
                 "doctrine/collections": "^1.6",
-                "php": "^7.3",
+                "php": "^7.4",
                 "psr/container": "^1.0",
                 "psr/log": "^1.1"
             },
@@ -1999,7 +1999,7 @@
                 "MIT"
             ],
             "description": "PHP Message sourcing libaray",
-            "time": "2020-04-23T17:05:47+00:00"
+            "time": "2020-04-27T12:27:05+00:00"
         },
         {
             "name": "psr/container",
@@ -2502,23 +2502,20 @@
         },
         {
             "name": "phpdocumentor/reflection-common",
-            "version": "2.0.0",
+            "version": "2.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpDocumentor/ReflectionCommon.git",
-                "reference": "63a995caa1ca9e5590304cd845c15ad6d482a62a"
+                "reference": "6568f4687e5b41b054365f9ae03fcb1ed5f2069b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/63a995caa1ca9e5590304cd845c15ad6d482a62a",
-                "reference": "63a995caa1ca9e5590304cd845c15ad6d482a62a",
+                "url": "https://api.github.com/repos/phpDocumentor/ReflectionCommon/zipball/6568f4687e5b41b054365f9ae03fcb1ed5f2069b",
+                "reference": "6568f4687e5b41b054365f9ae03fcb1ed5f2069b",
                 "shasum": ""
             },
             "require": {
                 "php": ">=7.1"
-            },
-            "require-dev": {
-                "phpunit/phpunit": "~6"
             },
             "type": "library",
             "extra": {
@@ -2535,9 +2532,22 @@
             "license": [
                 "MIT"
             ],
+            "authors": [
+                {
+                    "name": "Jaap van Otterdijk",
+                    "email": "opensource@ijaap.nl"
+                }
+            ],
             "description": "Common reflection classes used by phpdocumentor to reflect the code structure",
             "homepage": "http://www.phpdoc.org",
-            "time": "2018-08-07T13:53:10+00:00"
+            "keywords": [
+                "FQSEN",
+                "phpDocumentor",
+                "phpdoc",
+                "reflection",
+                "static analysis"
+            ],
+            "time": "2020-04-27T09:25:28+00:00"
         },
         {
             "name": "phpdocumentor/reflection-docblock",
@@ -3142,16 +3152,16 @@
         },
         {
             "name": "sebastian/code-unit",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/code-unit.git",
-                "reference": "8d8f09bd47c75159921e6e84fdef146343962866"
+                "reference": "00d2094a93573796ec6666401be467fa6efcd86a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/code-unit/zipball/8d8f09bd47c75159921e6e84fdef146343962866",
-                "reference": "8d8f09bd47c75159921e6e84fdef146343962866",
+                "url": "https://api.github.com/repos/sebastianbergmann/code-unit/zipball/00d2094a93573796ec6666401be467fa6efcd86a",
+                "reference": "00d2094a93573796ec6666401be467fa6efcd86a",
                 "shasum": ""
             },
             "require": {
@@ -3184,11 +3194,13 @@
             ],
             "description": "Collection of value objects that represent the PHP code units",
             "homepage": "https://github.com/sebastianbergmann/code-unit",
-            "support": {
-                "issues": "https://github.com/sebastianbergmann/code-unit/issues",
-                "source": "https://github.com/sebastianbergmann/code-unit/tree/master"
-            },
-            "time": "2020-03-30T11:59:20+00:00"
+            "funding": [
+                {
+                    "url": "https://github.com/sebastianbergmann",
+                    "type": "github"
+                }
+            ],
+            "time": "2020-04-27T06:25:01+00:00"
         },
         {
             "name": "sebastian/code-unit-reverse-lookup",
@@ -4025,7 +4037,7 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": "^7.3"
+        "php": "^7.4"
     },
     "platform-dev": [],
     "plugin-api-version": "1.1.0"
