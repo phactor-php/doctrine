@@ -1,0 +1,78 @@
+<?php
+
+namespace PhactorTest\Doctrine;
+
+use Doctrine\Common\Cache\ArrayCache;
+use Doctrine\DBAL\Types\Type;
+use Doctrine\ORM\Configuration;
+use Doctrine\ORM\EntityManager;
+use Doctrine\ORM\Mapping\Driver\XmlDriver;
+use Doctrine\ORM\Proxy\ProxyFactory;
+use Doctrine\ORM\Tools\SchemaTool;
+use Phactor\Actor\ActorIdentity;
+use Phactor\Doctrine\Dbal\JsonObject;
+use Phactor\Doctrine\Entity\ActorDomainMessage;
+use Phactor\Doctrine\Entity\DomainMessage as DomainMessageEntity;
+use Phactor\Doctrine\Mappings;
+use Phactor\Doctrine\OrmEventStore;
+use Phactor\DomainMessage;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * @covers \Phactor\Doctrine\OrmEventStore
+ * @uses \Phactor\Actor\ActorIdentity
+ * @uses \Phactor\DomainMessage
+ * @uses \Phactor\Doctrine\Entity\DomainMessage
+ * @uses \Phactor\Doctrine\Entity\ActorDomainMessage
+ * @uses \Phactor\Doctrine\Dbal\JsonObject
+ */
+class OrmEventStoreTest extends TestCase
+{
+    private EntityManager $em;
+    private SchemaTool $schemaTool;
+
+    public function setUp(): void
+    {
+        if (Type::hasType('json_object')) {
+            Type::overrideType('json_object', JsonObject::class);
+        } else {
+            Type::addType('json_object', JsonObject::class);
+        }
+
+        $config = new Configuration();
+
+        $config->setMetadataCacheImpl(new ArrayCache());
+        $config->setQueryCacheImpl(new ArrayCache());
+        $config->setAutoGenerateProxyClasses(ProxyFactory::AUTOGENERATE_EVAL);
+        $config->setProxyNamespace('Doctrine\Tests\Proxies');
+        $config->setProxyDir('/dev/null');
+        $config->setMetadataDriverImpl(
+            new XmlDriver([Mappings::XML_MAPPINGS])
+        );
+
+        $conn = array(
+            'driver' => 'pdo_sqlite',
+            'path' => ':memory:',
+        );
+
+        $this->em = EntityManager::create($conn, $config);
+        $this->schemaTool = new SchemaTool($this->em);
+
+        $classes[] = $this->em->getClassMetadata(ActorDomainMessage::class);
+        $classes[] = $this->em->getClassMetadata(DomainMessageEntity::class);
+
+        $this->schemaTool->createSchema($classes);
+    }
+
+    public function testSave()
+    {
+        $sut = new OrmEventStore($this->em);
+        $identity = new ActorIdentity('stdClass', 'id');
+        $domainMessage = DomainMessage::recordMessage('eid', null, $identity, 1, new \stdClass);
+        $sut->save($identity, $domainMessage);
+
+        $fromDatastore = $sut->load($identity);
+
+        self::assertEquals([$domainMessage], $fromDatastore);
+    }
+}

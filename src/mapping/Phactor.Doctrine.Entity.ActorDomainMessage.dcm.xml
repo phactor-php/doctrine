@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="Phactor\Doctrine\Entity\ActorDomainMessage">
+        <id name="domainMessageId" type="string" />
+        <id name="actorClass" type="string" />
+        <id name="actorId" type="string" />
+        <id name="version" type="integer"/>
+        <field name="recorded" type="datetime" />
+    </entity>
+
+</doctrine-mapping>
