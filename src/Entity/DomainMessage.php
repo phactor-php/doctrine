@@ -25,8 +25,8 @@ class DomainMessage
         $object->message = $values['message'];
         $object->messageClass = $values['messageClass'];
         $object->metadata = $values['metadata'];
-        $object->producerClass = $values['producerClass'];
-        $object->producerId = $values['producerId'];
+        $object->producerClass = $values['producerClass'] ?? null;
+        $object->producerId = $values['producerId'] ?? null;
         $object->produced = $values['produced'];
 
         return $object;
