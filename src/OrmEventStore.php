@@ -36,7 +36,9 @@ final class OrmEventStore implements EventStoreInterface
             $object->time = new \DateTimeImmutable($values['time']);
             $object->message = $messageDecoder->convertToPHPValue($values['message'], $entityManager->getConnection()->getDatabasePlatform());
             $object->metadata = $metadataDecoder->convertToPHPValue($values['metadata'], $entityManager->getConnection()->getDatabasePlatform());
-            $object->producer = new ActorIdentity($values['producerClass'], $values['producerId']);
+            if ($values['producerClass'] !== null && $values['producerId'] !== null) {
+                $object->producer = new ActorIdentity($values['producerClass'], $values['producerId']);
+            }
             $object->produced = new \DateTimeImmutable($values['produced']);
             $object->actor = new ActorIdentity($values['actorClass'], $values['actorId']);;
             $object->version = $values['version'];
@@ -56,7 +58,7 @@ final class OrmEventStore implements EventStoreInterface
             $values['messageClass'] = get_class($object->message);
             $values['message'] = $object->message;
             $values['metadata'] = $object->metadata;
-            $actorExtractor($object->producer, $values, 'producer');
+            $object->producer === null ?: $actorExtractor($object->producer, $values, 'producer');
             $values['produced'] = $object->produced;
 
             $actorExtractor($object->actor, $values, 'actor');
