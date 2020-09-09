@@ -85,6 +85,7 @@ final class OrmEventStore implements EventStoreInterface
                 $qb->expr()->eq('actorClass', '?'),
                 $qb->expr()->eq('actorId', '?')
             ))
+            ->orderBy('version')
             ->setParameter(0, $identity->getClass(), ParameterType::STRING)
             ->setParameter(1, $identity->getId(), ParameterType::STRING)
             ->execute();
