@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  xsi:schemaLocation="http://doctrine-project.org/schemas/orm/doctrine-mapping
+                  http://doctrine-project.org/schemas/orm/doctrine-mapping.xsd">
+
+    <entity name="Phactor\Doctrine\Entity\Snapshot">
+        <id name="id" type="string" />
+        <id name="class" type="string" />
+        <id name="version" type="integer"/>
+        <field name="snapshot" type="text" />
+    </entity>
+
+</doctrine-mapping>

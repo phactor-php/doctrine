@@ -7,17 +7,15 @@ use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
 use Phactor\Actor\ActorIdentity;
 use Phactor\Doctrine\Entity\ActorDomainMessage;
+use Phactor\Doctrine\Entity\Snapshot;
 use Phactor\DomainMessage;
 use Phactor\EventStore\EventStore as EventStoreInterface;
 use Phactor\EventStore\NoEventsFound;
 use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
+use Phactor\EventStore\TakesSnapshots;
 
-/**
- * Class OrmEventStore
- * @package Carnage\Cqorms\Persistence\EventStore
- */
-final class OrmEventStore implements EventStoreInterface
+final class OrmEventStore implements EventStoreInterface, TakesSnapshots
 {
     private $entityManager;
     private $hydrateCallback;
@@ -122,5 +120,68 @@ final class OrmEventStore implements EventStoreInterface
 
         $this->entityManager->flush();
         $this->entityManager->commit();
+    }
+
+    public function saveSnapshot(ActorIdentity $actorIdentity, int $version, string $snapshot): void
+    {
+        $entity = new Snapshot($actorIdentity->getId(), $actorIdentity->getClass(), $version, $snapshot);
+        $this->entityManager->persist($entity);
+        $this->entityManager->flush();
+    }
+
+    public function hasSnapshot(ActorIdentity $actorIdentity): bool
+    {
+        $latestSnapshot = $this->loadLatestSnapshot($actorIdentity);
+
+        return $latestSnapshot!== null;
+    }
+
+    public function loadSnapshot(ActorIdentity $actorIdentity): string
+    {
+        $latestSnapshot = $this->loadLatestSnapshot($actorIdentity);
+
+        return $latestSnapshot->getSnapshot();
+    }
+
+    public function loadFromLastSnapshot(ActorIdentity $actorIdentity)
+    {
+        $latestSnapshot = $this->loadLatestSnapshot($actorIdentity);
+        $version = $latestSnapshot->getVersion();
+        $qb = $this->entityManager->getConnection()->createQueryBuilder();
+        $results = $qb
+            ->select('d.*', 'a.*')
+            ->from('DomainMessage', 'd')
+            ->leftJoin('d', 'ActorDomainMessage', 'a', 'a.domainMessageId = d.id')
+            ->where($qb->expr()->andX(
+                $qb->expr()->eq('actorClass', '?'),
+                $qb->expr()->eq('actorId', '?')
+            ))
+            ->orderBy('version')
+            ->setFirstResult($version)
+            ->setParameter(0, $actorIdentity->getClass(), ParameterType::STRING)
+            ->setParameter(1, $actorIdentity->getId(), ParameterType::STRING)
+            ->execute();
+
+        $events = [];
+
+        while ($record = $results->fetch(FetchMode::ASSOCIATIVE)) {
+            $domainMessage = DomainMessage::anonMessage('', new \stdClass());
+            ($this->hydrateCallback)($domainMessage, $record);
+            $events[] = $domainMessage;
+        }
+
+        return $events;
+    }
+
+    private function loadLatestSnapshot(ActorIdentity $actorIdentity): ?Snapshot
+    {
+        /** @var Snapshot[] $entities */
+        $entities = $this->entityManager->getRepository(Snapshot::class)->findBy(
+            ['id' => $actorIdentity->getId(), 'class' => $actorIdentity->getClass()],
+            ['version' => 'DESC'],
+            1
+        );
+
+        return current($entities)?: null;
     }
 }
