@@ -36,4 +36,12 @@ class Snapshot
     {
         return $this->snapshot;
     }
+
+    public function update(int $newVersion, string $snapshot): void
+    {
+        if ($newVersion > $this->version) {
+            $this->snapshot = $snapshot;
+            $this->version = $newVersion;
+        }
+    }
 }

@@ -7,7 +7,7 @@
     <entity name="Phactor\Doctrine\Entity\Snapshot">
         <id name="id" type="string" />
         <id name="class" type="string" />
-        <id name="version" type="integer"/>
+        <field name="version" type="integer"/>
         <field name="snapshot" type="text" />
     </entity>
 

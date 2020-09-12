@@ -124,8 +124,15 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
 
     public function saveSnapshot(ActorIdentity $actorIdentity, int $version, string $snapshot): void
     {
-        $entity = new Snapshot($actorIdentity->getId(), $actorIdentity->getClass(), $version, $snapshot);
-        $this->entityManager->persist($entity);
+        $latestSnapshot = $this->loadLatestSnapshot($actorIdentity);
+
+        if ($latestSnapshot === null) {
+            $entity = new Snapshot($actorIdentity->getId(), $actorIdentity->getClass(), $version, $snapshot);
+            $this->entityManager->persist($entity);
+        } else {
+            $latestSnapshot->update($version, $snapshot);
+        }
+
         $this->entityManager->flush();
     }
 
@@ -175,13 +182,8 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
 
     private function loadLatestSnapshot(ActorIdentity $actorIdentity): ?Snapshot
     {
-        /** @var Snapshot[] $entities */
-        $entities = $this->entityManager->getRepository(Snapshot::class)->findBy(
+        return $this->entityManager->getRepository(Snapshot::class)->find(
             ['id' => $actorIdentity->getId(), 'class' => $actorIdentity->getClass()],
-            ['version' => 'DESC'],
-            1
         );
-
-        return current($entities)?: null;
     }
 }
