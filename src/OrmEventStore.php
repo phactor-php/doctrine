@@ -161,10 +161,10 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
             ->leftJoin('d', 'ActorDomainMessage', 'a', 'a.domainMessageId = d.id')
             ->where($qb->expr()->andX(
                 $qb->expr()->eq('actorClass', '?'),
-                $qb->expr()->eq('actorId', '?')
+                $qb->expr()->eq('actorId', '?'),
+                $qb->expr()->gt('version', $version)
             ))
             ->orderBy('version')
-            ->setFirstResult($version)
             ->setParameter(0, $actorIdentity->getClass(), ParameterType::STRING)
             ->setParameter(1, $actorIdentity->getId(), ParameterType::STRING)
             ->execute();
