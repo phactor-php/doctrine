@@ -2,6 +2,7 @@
 
 namespace Phactor\Doctrine;
 
+use Doctrine\DBAL\Driver\ResultStatement;
 use Doctrine\DBAL\FetchMode;
 use Doctrine\DBAL\ParameterType;
 use Doctrine\DBAL\Types\Type;
@@ -10,16 +11,16 @@ use Phactor\Doctrine\Entity\ActorDomainMessage;
 use Phactor\Doctrine\Entity\Snapshot;
 use Phactor\DomainMessage;
 use Phactor\EventStore\EventStore as EventStoreInterface;
+use Phactor\EventStore\LoadsEvents;
 use Phactor\EventStore\NoEventsFound;
-use Doctrine\Common\Collections\Criteria;
 use Doctrine\ORM\EntityManagerInterface;
 use Phactor\EventStore\TakesSnapshots;
 
-final class OrmEventStore implements EventStoreInterface, TakesSnapshots
+final class OrmEventStore implements EventStoreInterface, TakesSnapshots, LoadsEvents
 {
-    private $entityManager;
-    private $hydrateCallback;
-    private $extractCallback;
+    private EntityManagerInterface $entityManager;
+    private \Closure $hydrateCallback;
+    private \Closure $extractCallback;
 
     public function __construct(EntityManagerInterface $entityManager)
     {
@@ -66,13 +67,39 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
         }, null, 'Phactor\\DomainMessage');
     }
 
-    public function eventsMatching(Criteria $criteria): Iterable
+    public function loadEventsByIds(string ...$ids)
     {
-        $repository = $this->entityManager->getRepository(DomainMessage::class);
-        return $repository->matching($criteria);
+        $qb = $this->entityManager->getConnection()->createQueryBuilder();
+        $results = $qb
+            ->select('d.*', 'a.*')
+            ->from('DomainMessage', 'd')
+            ->leftJoin('d', 'ActorDomainMessage', 'a', 'a.domainMessageId = d.id')
+            ->where($qb->expr()->in('d.id', array_fill(0, count($ids), '?')))
+            ->setParameters($ids)
+            ->execute();
+
+        $events = $this->hydrateEvents($results);
+
+        return $events;
     }
 
-    public function load(ActorIdentity $identity): Iterable
+    public function loadEventsByClasses(string ...$classes)
+    {
+        $qb = $this->entityManager->getConnection()->createQueryBuilder();
+        $results = $qb
+            ->select('d.*', 'a.*')
+            ->from('DomainMessage', 'd')
+            ->leftJoin('d', 'ActorDomainMessage', 'a', 'a.domainMessageId = d.id')
+            ->where($qb->expr()->in('d.messageClass', array_fill(0, count($classes), '?')))
+            ->setParameters($classes)
+            ->execute();
+
+        $events = $this->hydrateEvents($results);
+
+        return $events;
+    }
+
+    public function load(ActorIdentity $identity): iterable
     {
         $qb = $this->entityManager->getConnection()->createQueryBuilder();
         $results = $qb
@@ -88,13 +115,7 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
             ->setParameter(1, $identity->getId(), ParameterType::STRING)
             ->execute();
 
-        $events = [];
-
-        while($record = $results->fetch(FetchMode::ASSOCIATIVE)) {
-            $domainMessage = DomainMessage::anonMessage('', new \stdClass());
-            ($this->hydrateCallback)($domainMessage, $record);
-            $events[] = $domainMessage;
-        }
+        $events = $this->hydrateEvents($results);
 
         if (empty($events)) {
             throw new NoEventsFound('Not found');
@@ -103,7 +124,7 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
         return $events;
     }
 
-    public function save(ActorIdentity $identity, DomainMessage ...$messages)
+    public function save(ActorIdentity $identity, DomainMessage ...$messages): void
     {
         $this->entityManager->beginTransaction();
 
@@ -150,7 +171,7 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
         return $latestSnapshot->getSnapshot();
     }
 
-    public function loadFromLastSnapshot(ActorIdentity $actorIdentity)
+    public function loadFromLastSnapshot(ActorIdentity $actorIdentity): iterable
     {
         $latestSnapshot = $this->loadLatestSnapshot($actorIdentity);
         $version = $latestSnapshot->getVersion();
@@ -169,13 +190,7 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
             ->setParameter(1, $actorIdentity->getId(), ParameterType::STRING)
             ->execute();
 
-        $events = [];
-
-        while ($record = $results->fetch(FetchMode::ASSOCIATIVE)) {
-            $domainMessage = DomainMessage::anonMessage('', new \stdClass());
-            ($this->hydrateCallback)($domainMessage, $record);
-            $events[] = $domainMessage;
-        }
+        $events = $this->hydrateEvents($results);
 
         return $events;
     }
@@ -185,5 +200,18 @@ final class OrmEventStore implements EventStoreInterface, TakesSnapshots
         return $this->entityManager->getRepository(Snapshot::class)->find(
             ['id' => $actorIdentity->getId(), 'class' => $actorIdentity->getClass()],
         );
+    }
+
+    private function hydrateEvents(ResultStatement $results): array
+    {
+        $events = [];
+
+        while ($record = $results->fetch(FetchMode::ASSOCIATIVE)) {
+            $domainMessage = DomainMessage::anonMessage('', new \stdClass());
+            ($this->hydrateCallback)($domainMessage, $record);
+            $events[] = $domainMessage;
+        }
+
+        return $events;
     }
 }

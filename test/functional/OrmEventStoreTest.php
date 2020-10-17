@@ -26,6 +26,7 @@ use PHPUnit\Framework\TestCase;
  * @uses \Phactor\Doctrine\Entity\DomainMessage
  * @uses \Phactor\Doctrine\Entity\ActorDomainMessage
  * @uses \Phactor\Doctrine\Dbal\JsonObject
+ * @uses \Phactor\Doctrine\Entity\Snapshot
  */
 class OrmEventStoreTest extends TestCase
 {
@@ -93,5 +94,33 @@ class OrmEventStoreTest extends TestCase
         $fromDatastore = $sut->loadFromLastSnapshot($identity);
 
         self::assertEqualsWithDelta([$domainMessages[2]], $fromDatastore, 1);
+    }
+
+    public function testLoadByIds()
+    {
+        $sut = new OrmEventStore($this->em);
+        $identity = new ActorIdentity('stdClass', 'id');
+        $domainMessages[] = DomainMessage::recordMessage('eid1', null, $identity, 1, new \stdClass);
+        $domainMessages[] = DomainMessage::recordMessage('eid2', null, $identity, 2, new \stdClass);
+        $domainMessages[] = DomainMessage::recordMessage('eid3', null, $identity, 3, new \stdClass);
+        $sut->save($identity, ...$domainMessages);
+
+        $fromDatastore = $sut->loadEventsByIds('eid2', 'eid3');
+
+        self::assertEqualsWithDelta([$domainMessages[1], $domainMessages[2]], $fromDatastore, 1);
+    }
+
+    public function testLoadByClasses()
+    {
+        $sut = new OrmEventStore($this->em);
+        $identity = new ActorIdentity('stdClass', 'id');
+        $domainMessages[] = DomainMessage::recordMessage('eid1', null, $identity, 1, new \DateTime());
+        $domainMessages[] = DomainMessage::recordMessage('eid2', null, $identity, 2, new \stdClass);
+        $domainMessages[] = DomainMessage::recordMessage('eid3', null, $identity, 3, new \stdClass);
+        $sut->save($identity, ...$domainMessages);
+
+        $fromDatastore = $sut->loadEventsByClasses(\stdClass::class);
+
+        self::assertEqualsWithDelta([$domainMessages[1], $domainMessages[2]], $fromDatastore, 1);
     }
 }
