@@ -4,7 +4,7 @@
   "minimum-stability": "stable",
   "license": "MIT",
   "require": {
-    "php": "^7.4",
+    "php": "^7.4 | ^8.0",
     "doctrine/orm": "^2.0.0",
     "phactor/phactor": "2.0.x-dev",
     "jms/serializer": "^3.6"
